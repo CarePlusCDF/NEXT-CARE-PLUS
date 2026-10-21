@@ -1,0 +1,188 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+@import "tailwindcss";
+
+:root {
+  --color-primary: #1c9770;
+  --color-primary-dark: #167a5a;
+  --color-primary-light: #23b386;
+  --color-secondary: #93CB52;
+  --color-secondary-dark: #7db43f;
+  --color-secondary-light: #a8d874;
+  --color-accent-1: #7AD180;
+  --color-accent-2: #7AD1C3;
+
+  --color-white: #FFFFFF;
+  --color-bg: #F4F6F8;
+  --color-bg-card: #FFFFFF;
+  --color-gray-100: #F0F2F5;
+  --color-gray-200: #E4E7EB;
+  --color-gray-300: #CDD3DA;
+  --color-gray-400: #9BA3AE;
+  --color-gray-500: #6B7685;
+  --color-gray-600: #4A5568;
+  --color-gray-700: #2D3748;
+  --color-gray-800: #1A202C;
+
+  --color-success: #93CB52;
+  --color-warning: #F6AD55;
+  --color-danger: #FC8181;
+  --color-info: #7AD1C3;
+
+  --font-family: 'Roboto', sans-serif;
+  --font-size-xs: 12px;
+  --font-size-sm: 14px;
+  --font-size-base: 16px;
+  --font-size-lg: 20px;
+  --font-size-xl: 24px;
+  --font-size-2xl: 32px;
+  --font-light: 300;
+  --font-regular: 400;
+  --font-medium: 500;
+  --font-bold: 700;
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+
+  --transition-fast: 150ms ease;
+  --transition-base: 250ms ease;
+  --transition-slow: 400ms ease;
+}
+
+
+
+html {
+  font-size: var(--font-size-base);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-family);
+  font-weight: var(--font-regular);
+  color: var(--color-gray-700);
+  background-color: var(--color-bg);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--color-gray-300);
+  border-radius: var(--radius-full);
+}
+
+
+
+@media (min-width: 768px) {
+  .app-container {
+    margin: 20px auto;
+    border-radius: var(--radius-lg);
+    min-height: calc(100vh - 40px);
+}
+
+  }
+
+
+.avatar-xl  { width: 180px; height: 180px; }
+.avatar-lg  { width: 64px;  height: 64px;  }
+.avatar-md  { width: 48px;  height: 48px;  }
+.avatar-sm  { width: 40px;  height: 40px;  }
+.avatar-xs  { width: 32px;  height: 32px;  }
+
+.icon-box-xs { width: 36px; height: 36px; }
+.icon-box-sm { width: 40px; height: 40px; }
+.icon-box-md { width: 48px; height: 48px; }
+
+.bar-active   { height: 40px; }
+.bar-inactive { height: 20px; }
+.progress-60  { width: 60%; }
+
+.bg-gradient-primary { background: linear-gradient(135deg, #1c9770 0%, #167a5a 100%); }
+.bg-gradient-accent1 { background: linear-gradient(135deg, #7AD180 0%, #1c9770 100%); }
+.bg-gradient-accent2 { background: linear-gradient(135deg, #7AD1C3 0%, #1c9770 100%); }
+
+.shadow-primary { box-shadow: 0 4px 16px rgba(28, 151, 112, 0.25); }
+.shadow-card    { box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); }
+
+.ranking-gold      { background-color: #F6C90E; color: #fff; }
+.ranking-silver    { background-color: #A0AEC0; color: #fff; }
+.ranking-bronze    { background-color: #C07A3A; color: #fff; }
+.ranking-item-highlight {
+  border: 2px solid #1c9770;
+  background-color: rgba(28, 151, 112, 0.05);
+}
+
+.ranking-cta {
+  min-height: 150px;
+  background-color: #167a5a;
+  background-image:
+    linear-gradient(115deg, rgba(16, 99, 77, 0.96) 0%, rgba(28, 151, 112, 0.82) 48%, rgba(147, 203, 82, 0.5) 100%),
+    url("data:image/svg+xml,%3Csvg width='720' height='280' viewBox='0 0 720 280' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='560' cy='72' r='54' fill='%23F6C90E' fill-opacity='.82'/%3E%3Ccircle cx='560' cy='72' r='34' fill='none' stroke='white' stroke-opacity='.38' stroke-width='10'/%3E%3Cpath d='M535 143h54c12 0 22 10 22 22v82h-98v-82c0-12 10-22 22-22Z' fill='white' fill-opacity='.22'/%3E%3Cpath d='M423 185h62c12 0 22 10 22 22v40H401v-40c0-12 10-22 22-22Z' fill='white' fill-opacity='.18'/%3E%3Cpath d='M618 172h50c12 0 22 10 22 22v53h-94v-53c0-12 10-22 22-22Z' fill='white' fill-opacity='.16'/%3E%3Cpath d='M196 207c42-76 103-116 183-119 54-2 102 11 145 38' stroke='white' stroke-opacity='.18' stroke-width='18' stroke-linecap='round'/%3E%3Cpath d='M321 111l17 34 38 6-28 27 7 38-34-18-34 18 6-38-27-27 38-6 17-34Z' fill='white' fill-opacity='.28'/%3E%3Ccircle cx='650' cy='44' r='8' fill='white' fill-opacity='.35'/%3E%3Ccircle cx='431' cy='51' r='10' fill='white' fill-opacity='.22'/%3E%3Ccircle cx='270' cy='186' r='7' fill='white' fill-opacity='.28'/%3E%3C/svg%3E");
+  background-position: center;
+  background-size: cover;
+}
+
+.beneficio-card {
+  background-color: #167a5a;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.beneficio-card::before,
+.beneficio-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+
+.beneficio-card::before {
+  background-image: var(--beneficio-bg-image);
+  background-position: center;
+  background-size: cover;
+  transform: scale(1.02);
+}
+
+.beneficio-card::after {
+  background:
+    linear-gradient(180deg, rgba(9, 37, 31, 0.22) 0%, rgba(9, 37, 31, 0.72) 64%, rgba(9, 37, 31, 0.9) 100%),
+    linear-gradient(115deg, rgba(28, 151, 112, 0.42) 0%, rgba(28, 151, 112, 0.08) 56%);
+}
+
+.beneficio-card:not(:disabled):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(28, 151, 112, 0.22);
+}
+
+.text-brand-primary    { color: #1c9770; }
+.text-brand-secondary  { color: #93CB52; }
+.text-brand-dark       { color: #1A202C; }
+.text-brand-muted      { color: #6B7685; }
+.text-brand-gray       { color: #9BA3AE; }
+.text-brand-accent2    { color: #7AD1C3; }
+
+.bg-brand-primary      { background-color: #1c9770; }
+.bg-brand-secondary    { background-color: #93CB52; }
+.bg-brand-dark         { background-color: #1A202C; }
+.bg-brand-gray-100     { background-color: #F0F2F5; }
+.bg-brand-gray-200     { background-color: #E4E7EB; }
+.bg-brand-page         { background-color: #F4F6F8; }
+.bg-brand-primary-subtle { background-color: rgba(28, 151, 112, 0.1); }
+
+.border-brand-primary  { border-color: #1c9770; }
+.border-brand-gray     { border-color: #E4E7EB; }
+
+
+.shadow-brand-primary  { box-shadow: 0 4px 16px rgba(28, 151, 112, 0.25); }
+.shadow-brand-card     { box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06); }
+.shadow-brand-banner   { box-shadow: 0 8px 24px rgba(28, 151, 112, 0.3); }
+.shadow-brand-tile     { box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); }
+
+
+

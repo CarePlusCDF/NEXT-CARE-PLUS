@@ -1,0 +1,17 @@
+[
+    {
+        "missao": "Fazer um pequeno alongamento antes de dormir",
+        "trofeus": 30,
+        "id": 1
+    },
+    {
+        "missao": "Sentar com postura correta por 10 minutos",
+        "trofeus": 30,
+        "id": 2
+    },
+    {
+        "missao": "Beber um copo de água agora",
+        "trofeus": 15,
+        "id": 3
+    }
+]

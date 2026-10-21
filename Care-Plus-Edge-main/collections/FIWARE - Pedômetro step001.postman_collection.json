@@ -1,0 +1,958 @@
+{
+  "info": {
+    "_postman_id": "689d7187-753b-4daf-97a8-026ea93f694a",
+    "name": "FIWARE - Pedômetro step001",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "53237423",
+    "_collection_link": "https://go.postman.co/collection/53237423-689d7187-753b-4daf-97a8-026ea93f694a?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "IOT Agent MQTT",
+      "item": [
+        {
+          "name": "1. Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://{{url}}:4041/iot/about",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "4041",
+              "path": [
+                "iot",
+                "about"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2. Provisioning Service Group",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "fiware-service",
+                "value": "smart",
+                "type": "text"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"services\": [\n    {\n      \"apikey\":      \"TEF\",\n      \"cbroker\":     \"http://{{url}}:1026\",\n      \"entity_type\": \"Thing\",\n      \"resource\":    \"\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "http://{{url}}:4041/iot/services",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "4041",
+              "path": [
+                "iot",
+                "services"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3. Provisioning Pedômetro",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "fiware-service",
+                "value": "smart",
+                "type": "text"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"devices\": [\n    {\n      \"device_id\":   \"step001\",\n      \"entity_name\": \"urn:ngsi-ld:Pedometer:001\",\n      \"entity_type\": \"Pedometer\",\n      \"protocol\":    \"PDI-IoTA-UltraLight\",\n      \"transport\":   \"MQTT\",\n      \"commands\": [\n        { \"name\": \"agua\", \"type\": \"command\" }\n      ],\n      \"attributes\": [\n        { \"object_id\": \"p\", \"name\": \"steps\",            \"type\": \"Integer\" },\n        { \"object_id\": \"m\", \"name\": \"steps_per_minute\", \"type\": \"Float\"   },\n        { \"object_id\": \"b\", \"name\": \"button_event\",     \"type\": \"Text\"    },\n        { \"object_id\": \"n\", \"name\": \"nfcId\",            \"type\": \"Text\"    }\n      ]\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "http://{{url}}:4041/iot/devices",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "4041",
+              "path": [
+                "iot",
+                "devices"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "4. List All Devices",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "fiware-service",
+                "value": "smart",
+                "type": "text"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://{{url}}:4041/iot/devices",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "4041",
+              "path": [
+                "iot",
+                "devices"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "5. Delete Pedômetro no IoT Agent",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "fiware-service",
+                "value": "smart",
+                "type": "text"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://{{url}}:4041/iot/devices/step001",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "4041",
+              "path": [
+                "iot",
+                "devices",
+                "step001"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Orion Context Broker",
+      "item": [
+        {
+          "name": "1. Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://{{url}}:1026/version",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "1026",
+              "path": [
+                "version"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2. Get Estado Atual do Pedômetro",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "fiware-service",
+                "value": "smart",
+                "type": "text"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://{{url}}:1026/v2/entities/urn:ngsi-ld:Pedometer:001",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "1026",
+              "path": [
+                "v2",
+                "entities",
+                "urn:ngsi-ld:Pedometer:001"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3. Get Passos Totais",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "fiware-service",
+                "value": "smart",
+                "type": "text"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://{{url}}:1026/v2/entities/urn:ngsi-ld:Pedometer:001/attrs/steps",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "1026",
+              "path": [
+                "v2",
+                "entities",
+                "urn:ngsi-ld:Pedometer:001",
+                "attrs",
+                "steps"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "4. Get Média Passos/min",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "fiware-service",
+                "value": "smart",
+                "type": "text"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://{{url}}:1026/v2/entities/urn:ngsi-ld:Pedometer:001/attrs/steps_per_minute",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "1026",
+              "path": [
+                "v2",
+                "entities",
+                "urn:ngsi-ld:Pedometer:001",
+                "attrs",
+                "steps_per_minute"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "5. Get Último Evento de Botão",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "fiware-service",
+                "value": "smart",
+                "type": "text"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://{{url}}:1026/v2/entities/urn:ngsi-ld:Pedometer:001/attrs/button_event",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "1026",
+              "path": [
+                "v2",
+                "entities",
+                "urn:ngsi-ld:Pedometer:001",
+                "attrs",
+                "button_event"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "6. Delete Pedômetro no Orion",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "fiware-service",
+                "value": "smart",
+                "type": "text"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://{{url}}:1026/v2/entities/urn:ngsi-ld:Pedometer:001",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "1026",
+              "path": [
+                "v2",
+                "entities",
+                "urn:ngsi-ld:Pedometer:001"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "STH-Comet (Histórico)",
+      "item": [
+        {
+          "name": "1. Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://{{url}}:8666/version",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "8666",
+              "path": [
+                "version"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2. Subscrever Passos Totais no STH-Comet",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "fiware-service",
+                "value": "smart",
+                "type": "text"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Notifica STH-Comet sobre mudanças de passos\",\n  \"subject\": {\n    \"entities\": [\n      { \"id\": \"urn:ngsi-ld:Pedometer:001\", \"type\": \"Pedometer\" }\n    ],\n    \"condition\": { \"attrs\": [\"steps\"] }\n  },\n  \"notification\": {\n    \"http\": { \"url\": \"http://{{url}}:8666/notify\" },\n    \"attrs\": [\"steps\"],\n    \"attrsFormat\": \"legacy\"\n  }\n}"
+            },
+            "url": {
+              "raw": "http://{{url}}:1026/v2/subscriptions",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "1026",
+              "path": [
+                "v2",
+                "subscriptions"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3. Subscrever Média Passos/min no STH-Comet",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "fiware-service",
+                "value": "smart",
+                "type": "text"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Notifica STH-Comet sobre mudanças de média de passos/min\",\n  \"subject\": {\n    \"entities\": [\n      { \"id\": \"urn:ngsi-ld:Pedometer:001\", \"type\": \"Pedometer\" }\n    ],\n    \"condition\": { \"attrs\": [\"steps_per_minute\"] }\n  },\n  \"notification\": {\n    \"http\": { \"url\": \"http://{{url}}:8666/notify\" },\n    \"attrs\": [\"steps_per_minute\"],\n    \"attrsFormat\": \"legacy\"\n  }\n}"
+            },
+            "url": {
+              "raw": "http://{{url}}:1026/v2/subscriptions",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "1026",
+              "path": [
+                "v2",
+                "subscriptions"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "4. Subscrever Eventos de Botão no STH-Comet",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "fiware-service",
+                "value": "smart",
+                "type": "text"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Notifica STH-Comet sobre eventos de botão\",\n  \"subject\": {\n    \"entities\": [\n      { \"id\": \"urn:ngsi-ld:Pedometer:001\", \"type\": \"Pedometer\" }\n    ],\n    \"condition\": { \"attrs\": [\"button_event\"] }\n  },\n  \"notification\": {\n    \"http\": { \"url\": \"http://{{url}}:8666/notify\" },\n    \"attrs\": [\"button_event\"],\n    \"attrsFormat\": \"legacy\"\n  }\n}"
+            },
+            "url": {
+              "raw": "http://{{url}}:1026/v2/subscriptions",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "1026",
+              "path": [
+                "v2",
+                "subscriptions"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "5. Histórico Passos Totais (últimos 30)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "fiware-service",
+                "value": "smart",
+                "type": "text"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://{{url}}:8666/STH/v1/contextEntities/type/Pedometer/id/urn:ngsi-ld:Pedometer:001/attributes/steps?lastN=30",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "8666",
+              "path": [
+                "STH",
+                "v1",
+                "contextEntities",
+                "type",
+                "Pedometer",
+                "id",
+                "urn:ngsi-ld:Pedometer:001",
+                "attributes",
+                "steps"
+              ],
+              "query": [
+                {
+                  "key": "lastN",
+                  "value": "30"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "6. Histórico Média Passos/min (últimos 30)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "fiware-service",
+                "value": "smart",
+                "type": "text"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://{{url}}:8666/STH/v1/contextEntities/type/Pedometer/id/urn:ngsi-ld:Pedometer:001/attributes/steps_per_minute?lastN=30",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "8666",
+              "path": [
+                "STH",
+                "v1",
+                "contextEntities",
+                "type",
+                "Pedometer",
+                "id",
+                "urn:ngsi-ld:Pedometer:001",
+                "attributes",
+                "steps_per_minute"
+              ],
+              "query": [
+                {
+                  "key": "lastN",
+                  "value": "30"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "7. Histórico Eventos de Botão (últimos 30)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "fiware-service",
+                "value": "smart",
+                "type": "text"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://{{url}}:8666/STH/v1/contextEntities/type/Pedometer/id/urn:ngsi-ld:Pedometer:001/attributes/button_event?lastN=30",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "8666",
+              "path": [
+                "STH",
+                "v1",
+                "contextEntities",
+                "type",
+                "Pedometer",
+                "id",
+                "urn:ngsi-ld:Pedometer:001",
+                "attributes",
+                "button_event"
+              ],
+              "query": [
+                {
+                  "key": "lastN",
+                  "value": "30"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "adicionar atributo nfcid",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "NFC - Vínculo",
+      "item": [
+        {
+          "name": "1. Simular Vínculo NFC (teste manual)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://{{url}}:8080/?tag=04A3B2C1D4E5F6&device=urn:ngsi-ld:Pedometer:001",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "8080",
+              "path": [
+                ""
+              ],
+              "query": [
+                {
+                  "key": "tag",
+                  "value": "04A3B2C1D4E5F6",
+                  "description": "UID físico da tag NTAG213"
+                },
+                {
+                  "key": "device",
+                  "value": "urn:ngsi-ld:Pedometer:001",
+                  "description": "ID da entidade no Orion"
+                }
+              ]
+            },
+            "description": "Simula o que o celular faz ao encostar na tag NFC. Substitua o valor de 'tag' pelo UID real lido com NFC Tools."
+          },
+          "response": []
+        },
+        {
+          "name": "2. Health Check Servidor NFC",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://{{url}}:8080/health",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "8080",
+              "path": [
+                "health"
+              ]
+            },
+            "description": "Verifica se o servidor nfc_vincular.py está rodando."
+          },
+          "response": []
+        },
+        {
+          "name": "3. Verificar nfcId Vinculado no Orion",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "fiware-service",
+                "value": "smart",
+                "type": "text"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://{{url}}:1026/v2/entities/urn:ngsi-ld:Pedometer:001/attrs/nfcId",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "1026",
+              "path": [
+                "v2",
+                "entities",
+                "urn:ngsi-ld:Pedometer:001",
+                "attrs",
+                "nfcId"
+              ]
+            },
+            "description": "Confirma se o UID da tag NFC foi registrado corretamente na entidade."
+          },
+          "response": []
+        },
+        {
+          "name": "4. Buscar Dispositivo por nfcId",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "fiware-service",
+                "value": "smart",
+                "type": "text"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://{{url}}:1026/v2/entities?type=Pedometer&q=nfcId==04A3B2C1D4E5F6",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "1026",
+              "path": [
+                "v2",
+                "entities"
+              ],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "Pedometer"
+                },
+                {
+                  "key": "q",
+                  "value": "nfcId==04A3B2C1D4E5F6",
+                  "description": "Substitua pelo UID real da tag"
+                }
+              ]
+            },
+            "description": "Dado um UID de tag NFC, retorna qual dispositivo (pulseira) está vinculado a ela. Útil para validar o vínculo de forma reversa."
+          },
+          "response": []
+        },
+        {
+          "name": "5. Histórico de Vínculos NFC (STH-Comet)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "fiware-service",
+                "value": "smart",
+                "type": "text"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://{{url}}:8666/STH/v1/contextEntities/type/Pedometer/id/urn:ngsi-ld:Pedometer:001/attributes/nfcId?lastN=10",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "8666",
+              "path": [
+                "STH",
+                "v1",
+                "contextEntities",
+                "type",
+                "Pedometer",
+                "id",
+                "urn:ngsi-ld:Pedometer:001",
+                "attributes",
+                "nfcId"
+              ],
+              "query": [
+                {
+                  "key": "lastN",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Histórico dos últimos 10 vínculos NFC registrados. Requer subscription ativa (ver req. 6)."
+          },
+          "response": []
+        },
+        {
+          "name": "6. Subscrever nfcId no STH-Comet",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "fiware-service",
+                "value": "smart",
+                "type": "text"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Notifica STH-Comet sobre vínculos NFC\",\n  \"subject\": {\n    \"entities\": [\n      { \"id\": \"urn:ngsi-ld:Pedometer:001\", \"type\": \"Pedometer\" }\n    ],\n    \"condition\": { \"attrs\": [\"nfcId\"] }\n  },\n  \"notification\": {\n    \"http\": { \"url\": \"http://{{url}}:8666/notify\" },\n    \"attrs\": [\"nfcId\"],\n    \"attrsFormat\": \"legacy\"\n  }\n}"
+            },
+            "url": {
+              "raw": "http://{{url}}:1026/v2/subscriptions",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "1026",
+              "path": [
+                "v2",
+                "subscriptions"
+              ]
+            },
+            "description": "Cria subscription para que o STH-Comet registre o histórico de vínculos NFC."
+          },
+          "response": []
+        },
+        {
+          "name": "New Request",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "New Request",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "New Request",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "New Request",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "New Request",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "New Request",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "url",
+      "value": "35.247.231.140"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+.venv/
+.venv-pio/
+**/node_modules/
+**/dist/
+**/__pycache__/
+.pytest_cache/
+**/.env
+**/.env.local
+**/*.db
+**/.pio/
+**/config.h
+**/CareConfig.h
+artifacts/
+**/*.pem
+!**/*.example.pem

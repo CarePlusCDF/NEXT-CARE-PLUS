@@ -1,0 +1,5 @@
+.pio/
+firmware/include/CareConfig.h
+*.pem
+.env
+__pycache__/

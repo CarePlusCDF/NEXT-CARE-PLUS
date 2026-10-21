@@ -1,0 +1,122 @@
+[
+    {
+        "id": 1,
+        "titulo": "Desconto de 20% em corridas da Uber",
+        "parceiro": "Uber",
+        "custoTrofeus": 400
+    },
+    {
+        "id": 2,
+        "titulo": "1 mês grátis de Spotify Premium",
+        "parceiro": "Spotify",
+        "custoTrofeus": 500
+    },
+    {
+        "id": 3,
+        "titulo": "Barrinha de proteína da Growth Supplements",
+        "parceiro": "Growth Supplements",
+        "custoTrofeus": 450
+    },
+    {
+        "id": 4,
+        "titulo": "Desconto de 30% em consulta na Dr. Consulta",
+        "parceiro": "Dr. Consulta",
+        "custoTrofeus": 600
+    },
+    {
+        "id": 5,
+        "titulo": "Cupom de R$20 no iFood",
+        "parceiro": "iFood",
+        "custoTrofeus": 500
+    },
+    {
+        "id": 6,
+        "titulo": "Shake proteico da Max Titanium",
+        "parceiro": "Max Titanium",
+        "custoTrofeus": 400
+    },
+    {
+        "id": 7,
+        "titulo": "Desconto de 25% em academia Smart Fit",
+        "parceiro": "Smart Fit",
+        "custoTrofeus": 700
+    },
+    {
+        "id": 8,
+        "titulo": "Garrafa térmica esportiva",
+        "parceiro": "Care Plus",
+        "custoTrofeus": 450
+    },
+    {
+        "id": 9,
+        "titulo": "Desconto de R$15 em corrida 99",
+        "parceiro": "99",
+        "custoTrofeus": 400
+    },
+    {
+        "id": 10,
+        "titulo": "Plano mensal da Headspace (meditação)",
+        "parceiro": "Headspace",
+        "custoTrofeus": 550
+    },
+    {
+        "id": 11,
+        "titulo": "Kit de snacks saudáveis (barra + nuts)",
+        "parceiro": "Care Plus",
+        "custoTrofeus": 500
+    },
+    {
+        "id": 12,
+        "titulo": "Desconto de 20% na Decathlon",
+        "parceiro": "Decathlon",
+        "custoTrofeus": 550
+    },
+    {
+        "id": 13,
+        "titulo": "Fone esportivo Bluetooth",
+        "parceiro": "Care Plus",
+        "custoTrofeus": 800
+    },
+    {
+        "id": 14,
+        "titulo": "Voucher de R$30 em farmácia Drogasil",
+        "parceiro": "Drogasil",
+        "custoTrofeus": 650
+    },
+    {
+        "id": 15,
+        "titulo": "Desconto de 25% em massagem relaxante",
+        "parceiro": "Parceiro wellness",
+        "custoTrofeus": 700
+    },
+    {
+        "id": 16,
+        "titulo": "Suplemento multivitamínico (1 mês)",
+        "parceiro": "Care Plus",
+        "custoTrofeus": 500
+    },
+    {
+        "id": 17,
+        "titulo": "Desconto de 20% em nutricionista",
+        "parceiro": "Parceiro saúde",
+        "custoTrofeus": 650
+    },
+    {
+        "id": 18,
+        "titulo": "Camiseta esportiva dry-fit",
+        "parceiro": "Care Plus",
+        "custoTrofeus": 500
+    },
+    {
+        "id": 19,
+        "titulo": "Voucher de R$25 na Amazon",
+        "parceiro": "Amazon",
+        "custoTrofeus": 750
+    },
+    {
+        "id": 20,
+        "titulo": "Plano básico do Gympass (1 semana)",
+        "parceiro": "Gympass",
+        "custoTrofeus": 800
+    }
+]
