@@ -56,7 +56,7 @@ const Connect = () => {
   }, [missoesConnect])
 
   const passosHoje = pedometro?.steps ?? 0
-  const nomePulseira = pedometro?.name || ''
+  const nomeConta = data?.usuario?.nome || ''
   const mediaDiaria = pedometro?.dailyStepsAverage ?? 0
   const statusPedometro = erro ? 'offline' : pedometro?.status || 'aguardando'
   const resetLabel = luminaria.resetEm?.label || missoesConnect.find((missao) => missao.resetEm?.label)?.resetEm?.label || ''
@@ -132,9 +132,9 @@ const Connect = () => {
               <div className="rounded-md border border-[#E4E7EB] bg-[#F8FAFB] p-3">
                 <p className="text-[#6B7685] text-[12px] mb-1">Status da pulseira</p>
                 <p className="font-bold text-[18px] text-[#1A202C] capitalize">{statusPedometro}</p>
-                <p className="text-[#6B7685] text-[12px] mt-1">{pedometro?.deviceId || 'step001'}</p>
-                {nomePulseira ? (
-                  <p className="text-[#1c9770] text-[12px] font-bold mt-1">Conectado em: {nomePulseira}</p>
+                <p className="text-[#6B7685] text-[12px] mt-1">{pedometro?.deviceId || 'Aguardando consulta'}</p>
+                {nomeConta ? (
+                  <p className="text-[#6B7685] text-[12px] mt-1">Conta: {nomeConta}</p>
                 ) : null}
               </div>
 

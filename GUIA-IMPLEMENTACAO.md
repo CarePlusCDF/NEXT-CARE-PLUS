@@ -58,6 +58,16 @@ O arquivo `backend/.env.example` contém os parâmetros. Se criar `backend/.env`
 
 Crie um único projeto e copie a conexão PostgreSQL em **Connect → Session pooler**, compatível com IPv4. Configure `DATABASE_URL` no backend. A aplicação usa SQLAlchemy + psycopg diretamente, sem chave de serviço no navegador ou firmware. Escape caracteres especiais da senha na URL.
 
+Para configurar localmente sem escapar a senha à mão, pare a API com `Ctrl+C` e, na pasta `backend`, execute:
+
+```powershell
+..\..\.venv\Scripts\python manage.py configure-database
+Remove-Item Env:DATABASE_URL -ErrorAction SilentlyContinue
+..\..\.venv\Scripts\python manage.py migrate
+```
+
+O primeiro comando pede a URI do Session pooler (pode conter `[YOUR-PASSWORD]`) e depois a senha do banco. As duas entradas ficam ocultas ao colar/digitar. Ele cria/atualiza apenas `DATABASE_URL` em `backend/.env`, codifica a senha e exige SSL. Não envie a senha no chat. O `Remove-Item Env:DATABASE_URL` limpa a variável temporária do PowerShell usada no teste com SQLite, para que o próximo comando use o `.env`. A migração deve mostrar `Esquema atualizado.`; depois reinicie o Uvicorn. Os dados anteriores do SQLite não são importados automaticamente para o projeto Supabase.
+
 Exemplo de formato, com valores fictícios:
 
 ```text

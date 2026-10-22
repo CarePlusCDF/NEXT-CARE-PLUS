@@ -5,10 +5,52 @@ import json
 import secrets
 from pathlib import Path
 from sqlalchemy import text
+from sqlalchemy.engine import make_url
+from sqlalchemy.exc import ArgumentError
+from dotenv import set_key
 import database as store
 from database import Account, Base, Device, lock_account, transaction
 from domain import new_run
 from security import digest, password_hash
+
+def supabase_connection_url(connection, password):
+    """Build a session-pooler URL without printing or manually escaping credentials."""
+    try:
+        url = make_url(connection.strip())
+        valid = (
+            url.drivername in {"postgres", "postgresql", "postgresql+psycopg"}
+            and bool(url.host and url.host.endswith(".pooler.supabase.com"))
+            and url.port == 5432
+            and bool(url.username and url.username.startswith("postgres."))
+            and url.database == "postgres"
+        )
+    except (ArgumentError, ValueError):
+        valid = False
+    if not valid:
+        raise ValueError("Copie a URI completa de Connect > Session pooler (porta 5432).")
+    if not password:
+        raise ValueError("Informe a senha do banco definida ao criar o projeto.")
+    sslmode = url.query.get("sslmode", "require")
+    if sslmode not in {"require", "verify-ca", "verify-full"}:
+        sslmode = "require"
+    return url.set(drivername="postgresql+psycopg", password=password).update_query_dict(
+        {"sslmode": sslmode}
+    ).render_as_string(hide_password=False)
+
+def configure_database():
+    print("Configuracao local do Supabase. As entradas abaixo ficam ocultas ao colar/digitar.")
+    connection = getpass.getpass("Cole a URI de Connect > Session pooler e pressione Enter: ")
+    password = getpass.getpass("Cole a senha do BANCO Supabase e pressione Enter: ")
+    try:
+        value = supabase_connection_url(connection, password)
+    except ValueError as exc:
+        raise SystemExit(str(exc)) from None
+    env_path = Path(__file__).resolve().parent / ".env"
+    if not env_path.exists():
+        example = env_path.with_name(".env.example")
+        env_path.write_text(example.read_text(encoding="utf-8"), encoding="utf-8")
+    set_key(str(env_path), "DATABASE_URL", value, quote_mode="always")
+    print("Conexao salva em backend/.env. A senha nao foi exibida. Nenhuma tabela foi alterada.")
 
 def migrate():
     Base.metadata.create_all(store.engine)
@@ -59,6 +101,7 @@ def import_user(path, account_id):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     commands = parser.add_subparsers(dest="command", required=True)
+    commands.add_parser("configure-database")
     commands.add_parser("migrate")
     p = commands.add_parser("device")
     p.add_argument("--account", required=True)
@@ -68,6 +111,9 @@ if __name__ == "__main__":
     p.add_argument("--file", required=True)
     p.add_argument("--account", required=True)
     args = parser.parse_args()
+    if args.command == "configure-database":
+        configure_database()
+        raise SystemExit(0)
     store.configure()
     if args.command == "migrate":
         migrate()
