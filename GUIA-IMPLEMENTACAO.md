@@ -116,9 +116,9 @@ python manage.py device --account 123456 --id luminaria-001 --kind lamp
 
 Cada comando mostra uma credencial exclusiva e `initial_generation`. Guarde esses valores no `CareConfig.h` local. Uma conta aceita uma pulseira e uma luminária. O comando recusa sobrescrever associação ou ID existente. Não use senha da conta nem credencial do Supabase nos aparelhos.
 
-Copie `Care-Plus-Edge-main/firmware/include/config.example.h` para `CareConfig.h`. Compile/grave cada aparelho com seu próprio `DEVICE_ID`, `DEVICE_TOKEN` e geração; no exemplo os IDs mudam automaticamente pelo alvo da placa, mas os tokens precisam ser trocados entre as duas gravações. Preencha as duas redes e `API_BASE` HTTPS. Ajuste polaridade dos botões/RGB à montagem.
+Use `Care-Plus-Edge-main/firmware/include/CareConfig.h`, já preparado localmente com a URL pública da API e valores de exemplo. Em outra cópia do projeto, crie esse arquivo copiando `config.example.h`. Preencha as duas redes e suas senhas. No bloco `CONFIG_IDF_TARGET_ESP32C3`, preencha o token e a geração inicial da pulseira; no bloco `else`, os da luminária. A compilação seleciona automaticamente os IDs e as credenciais corretos para cada placa. Ajuste polaridade dos botões/RGB à montagem. O arquivo privado é ignorado pelo Git.
 
-Preencha `ROOT_CA` com a CA raiz que valida a cadeia TLS do domínio real da API. Confira o emissor/cadeia desse domínio e obtenha a raiz no site oficial da autoridade certificadora. O código usa `setCACert` e nunca desabilita validação. O aparelho precisa de horário NTP válido para TLS. A validação real do certificado depende do domínio publicado e permanece pendente até configurá-lo. O guia oficial da [Espressif](https://docs.espressif.com/projects/arduino-esp32/en/latest/api/wifi.html) descreve as APIs Wi-Fi usadas.
+O arquivo público `ApiRootCA.h`, incluído pela configuração, fornece `ROOT_CA` com seis raízes de confiança: Google Trust Services R1–R4 e ISRG X1/X2. Foram obtidas dos repositórios oficiais [Google Trust Services](https://pki.goog/roots.pem) e [Let's Encrypt](https://letsencrypt.org/certificates/); as impressões SHA-256 estão no cabeçalho. O código usa `setCACert` e mantém validação de certificado, hostname e horário. O aparelho precisa de horário NTP válido para TLS. A conexão real e a compatibilidade da cadeia do domínio publicado precisam ser confirmadas na rede dos ESP32. A inspeção TLS deste computador mostrou uma cadeia intermediada pelo Norton; essa CA local não foi incluída no firmware. Se a cadeia pública mudar para uma CA fora do conjunto, obtenha a raiz adequada da autoridade oficial e atualize o cabeçalho. O guia oficial da [Espressif](https://docs.espressif.com/projects/arduino-esp32/en/latest/api/wifi.html) descreve as APIs Wi-Fi usadas.
 
 ## 5. Compilar e gravar
 
@@ -144,9 +144,87 @@ Pinagem ativa:
 - GPIO10 só é entrada do BTN3. Nenhum LED é acionado nele. GPIO7 permanece sem configuração/acionamento; não há servo.
 - Luminária: vermelho25, verde26, azul27.
 
+### Gravação pelo colega em outro computador Windows
+
+Os aparelhos estão com um colega e o Wi-Fi dele já foi configurado. O pacote local `artifacts/CarePlus-Gravacao-Windows-PRIVADO.zip` contém os firmwares compilados e um `LEIA-ME.md` com os comandos. Envie somente esse ZIP em canal privado. Os binários contêm credenciais e estão ignorados pelo Git. Não é necessário enviar `.env` ou a senha do banco.
+
+No Windows do colega, extraia o ZIP, prepare Python/esptool e identifique a porta USB nesse computador. Grave primeiro a pulseira e confira sua comunicação no site. A primeira instalação inclui LittleFS vazio; a atualização grava só a aplicação. Não repita a inicialização quando já houver eventos pendentes. Alterações posteriores de Wi-Fi, tokens ou firmware exigem recompilar e gerar um pacote novo.
+
+### Configurar o Wi-Fi pelo celular — novo firmware
+
+O firmware agora inclui uma página local em cada aparelho. É necessário atualizar as duas placas uma vez com o pacote **`artifacts/CarePlus-WiFi-Celular-PRIVADO.zip`**. A versão anterior já testada nas placas não tem essa página. A nova versão foi compilada e teve testes locais; ainda deve ser validada fisicamente após gravar.
+
+O pacote contém `LEIA-ME.md`, `gravar.py` e **`ACESSO-WIFI-PRIVADO.md`**, com os nomes e as senhas exclusivas das redes de configuração. Compartilhe somente com o responsável pelos aparelhos. Essas senhas não são os tokens da API. Nunca publique o ZIP ou o arquivo de acesso.
+
+No Windows do colega, extraia o ZIP em uma pasta nova e siga o `LEIA-ME.md`. A gravação é somente da aplicação, sem primeira instalação. O pacote rejeita `--primeira-instalacao` e não contém LittleFS ou imagens de apagamento. Nas portas de exemplo já usadas:
+
+```powershell
+py -m venv .venv-flash
+.\.venv-flash\Scripts\python -m pip install -r requirements.txt
+.\.venv-flash\Scripts\python gravar.py --verificar
+.\.venv-flash\Scripts\python gravar.py --listar
+.\.venv-flash\Scripts\python gravar.py --placa pulseira --porta COM5
+.\.venv-flash\Scripts\python gravar.py --placa luminaria --porta COM4
+```
+
+Confira as COM antes de executar. Grave uma placa por vez e confira que voltou a funcionar nas redes atuais antes de iniciar o teste do portal.
+
+Para cadastrar a rede da feira:
+
+1. Mantenha o aparelho alimentado. Deixe indisponíveis as duas redes conhecidas, inclusive o hotspot salvo. Após cerca de **60 segundos sem comunicação válida com a API**, surge a rede `CarePlus-...` correspondente ao aparelho.
+2. No celular, conecte à rede do aparelho usando a senha do arquivo privado. Mantenha a conexão mesmo com o aviso de rede sem internet.
+3. Abra **http://192.168.4.1** em Safari/Chrome. Se a tela automática do celular não funcionar, use o navegador e esse endereço explícito.
+4. Escolha **Rede principal** ou **Rede alternativa / celular**. Busque redes próximas ou digite o SSID, inclusive de rede oculta, e informe a senha. São aceitas redes de 2,4 GHz com senha comum; rede aberta precisa ser marcada explicitamente.
+5. Toque em **Salvar e testar conexão**. Em até 60 segundos o aparelho tenta Wi-Fi, horário NTP e acesso autenticado à API HTTPS. A rede é salva em NVS somente após resposta válida e commit de armazenamento. Se falhar ou cancelar, as redes anteriores são preservadas. Abra a API/site antes para despertar o Render, se necessário.
+6. Aguarde **Rede salva e comunicação com a API confirmada**. Volte à conexão habitual do celular e confira o site. A rede de configuração encerra cerca de 30 segundos após o salvamento. Se houver interrupção durante troca de canal, reconecte à mesma rede CarePlus e reabra a página.
+7. Repita no outro aparelho. Pulseira e luminária têm configurações e senhas locais independentes.
+
+As redes salvas no portal sobrevivem a reinício e atualização normal e **prevalecem sobre os valores de `CareConfig.h`**. Cada salvamento altera apenas a posição escolhida. Para trocar essas redes depois, abra o portal novamente; editar o cabeçalho não substitui a configuração NVS já salva. O progresso, tokens, fila persistida e reset exclusivo pelo site permanecem separados da configuração de rede.
+
+A página e a busca de redes rodam em uma tarefa separada da leitura dos sensores/botões e da comunicação HTTPS. Não há combinação de botões de função nem necessidade de BOOT/RST para abrir a configuração. O HTTP local só é aceito pela rede de configuração, com proteção contra requisições de outra origem; a senha Wi-Fi digitada não é devolvida nas respostas ou logs. O acesso ao backend continua HTTPS com validação de CA.
+
+Para gerar outro pacote depois de modificar e recompilar o firmware, partindo da raiz:
+
+```powershell
+.\.venv-pio\Scripts\python -m platformio run -d Care-Plus-Edge-main -e pulseira -e luminaria
+.\.venv-pio\Scripts\python Care-Plus-Edge-main/tools/preparar-pacote-wifi.py
+```
+
+O gerador confere a presença do portal nos binários, configuração compilada, tamanho e tabela de partições. Ele cria o ZIP privado e as senhas locais em `artifacts/`, sem acessar placas ou imprimir credenciais. A NVS usa o namespace `care-wifi` e um blob versionado com CRC, separado de LittleFS. Referências: [Preferences/NVS](https://docs.espressif.com/projects/arduino-esp32/en/latest/api/preferences.html) e [modos Wi-Fi STA/AP](https://docs.espressif.com/projects/arduino-esp32/en/latest/api/wifi.html). A conexão real AP+STA, o navegador do celular e o consumo de memória sob TLS exigem teste nas placas.
+
+### Trocar o Wi-Fi pelo código — alternativa antes de salvar redes no portal
+
+**Após configurar pelo celular, use o portal para novas trocas:** os valores salvos em NVS prevalecem sobre o cabeçalho. O procedimento abaixo altera os valores iniciais compilados, usados quando não há configuração NVS válida.
+
+Leve o computador com o projeto completo, `CareConfig.h` privado e o ambiente `.venv-pio` já preparado, além dos cabos USB de dados. O computador que tem apenas o ZIP de gravação não tem o projeto/ferramentas de compilação; o ZIP antigo continua contendo as redes antigas.
+
+Ao receber as credenciais, em `firmware/include/CareConfig.h`, troque somente a primeira entrada de `WIFI_SSIDS` pelo nome da rede e a primeira de `WIFI_PASSWORDS` pela senha. Preserve a segunda rede do hotspot já testado e as credenciais dos dispositivos. Salve o arquivo.
+
+No PowerShell, partindo da raiz Care-Plus:
+
+```powershell
+cd Care-Plus-Edge-main
+..\.venv-pio\Scripts\python -m platformio device list
+```
+
+Conecte e identifique cada placa. Os exemplos abaixo usam as últimas portas relatadas; substitua conforme a listagem do computador usado. Execute um comando por vez e confira o sucesso. Cada comando recompila e grava a respectiva placa:
+
+```powershell
+..\.venv-pio\Scripts\python -m platformio run -e pulseira -t upload --upload-port COM5
+..\.venv-pio\Scripts\python -m platformio run -e luminaria -t upload --upload-port COM4
+```
+
+Essa atualização mantém a tabela de partições atual e não grava LittleFS. Não execute `uploadfs` ou apagamento total: a fila já está instalada. Feche os monitores seriais antes de gravar. Na pulseira, BOOT/RST estão inacessíveis; a gravação inicial funcionou por controle automático. Se falhar, interrompa o procedimento e use o hotspot já testado até diagnosticar; não improvise contato em pontos soldados.
+
+Depois de cada gravação, confira status online, a cor solicitada/aplicada da luminária e um único toque de água com acréscimo de 220 ml. Comandos de atualização via PlatformIO exigem o projeto e as ferramentas no mesmo computador ao qual a placa está conectada. Para manter o trabalho em dois computadores, é necessário gerar e transferir um ZIP novo após recompilar; editar `CareConfig.h` não atualiza um ZIP já existente.
+
+O procedimento atende redes Wi-Fi comuns com nome/senha. Uma rede da feira que exija aceitar termos ou login em página web não é suportada pelo firmware atual; nesse caso, use o hotspot de 2,4 GHz com credenciais já gravadas.
+
 ## Rede, fila e reinício
 
 As leituras rodam no `loop()` e HTTPS em tarefa FreeRTOS separada, compatível com o C3 de um núcleo. Tentativas Wi-Fi alternam redes após 12 segundos; três falhas reais de API também disparam alternativa, com intervalo de pelo menos 20 segundos. Não volta automaticamente à principal enquanto a alternativa funciona. Redes com portal de login não são suportadas; use o hotspot de 2,4 GHz.
+
+No iPhone, em Ajustes → Acesso Pessoal, ative Permitir Acesso a Outros e, quando disponível, Maximizar Compatibilidade (2,4 GHz/WPA2). Mantenha a tela aberta durante a conexão inicial. O nome e a senha precisam corresponder exatamente à segunda rede compilada nos aparelhos. Esse cenário foi confirmado pelo usuário com os aparelhos online em 22/10/2026. Para testar a volta, religue a rede principal antes de desligar o hotspot. Referências: [conexão ao Acesso Pessoal](https://support.apple.com/pt-br/119837) e [modo de compatibilidade](https://support.apple.com/pt-br/guide/security/secfd166f620/web).
 
 Cada aperto é persistido antes de envio. Passos consecutivos ainda não enviados podem ser agrupados, até mil por registro e sem atravessar o dia brasileiro. Antes de enviar, o registro é selado: o mesmo ID nunca muda de conteúdo em reenvios. Até 32 registros vão em cada requisição. ACK do servidor remove cada registro; perda da resposta causa reenvio idempotente.
 
@@ -170,12 +248,15 @@ Aparelhos offline aparecem com “sincronização da sessão pendente”. Ao rec
 
 Os arquivos existentes `usuarios.json` e outros JSONs de progresso não são importados automaticamente. Para importar explicitamente uma conta, use `python manage.py import-user --file usuarios.json --account NUMERO`. O comando pede uma senha nova e preserva perfil, saldo, total histórico e benefícios; recusa sobrescrever conta. Leituras e conclusões antigas não verificadas não são reprocessadas nem premiadas. Os arquivos de origem permanecem intactos.
 
-## O que falta preencher/validar
+## Estado da validação em 22/10/2026
 
-1. Projeto Supabase e `DATABASE_URL`; deploy Render e origem CORS; deploy Vercel e URL da API.
-2. Conta de demonstração e provisionamento dos dois aparelhos.
-3. Duas redes, senhas, CA TLS do domínio publicado, tokens e geração inicial no `CareConfig.h`.
-4. Polaridade dos quatro botões e do RGB; calibração dos passos; teste físico com a fila, hotspot, energia e reset offline.
-5. Medição de atraso real. O intervalo de consulta não é garantia de latência em Render suspenso ou rede instável.
+Supabase, Render e Vercel foram configurados pelo usuário. As duas placas foram gravadas pelo colega e apareceram online. O usuário confirmou: BTN1/água, BTN2/seleção com pontos sem repetição, BTN3/cancelamento sem perda de progresso, SOS, cor física e confirmação da luminária, queda de rede com reenvio único, hotspot do iPhone e retorno ao Wi-Fi principal, reset com invalidação de evento antigo offline e recuperação de evento pendente após corte completo de USB e bateria. O total de passos não zerou após 60 segundos parado. Os resultados são relatos de testes acompanhados por chamada; detalhes em `STATUS-IMPLEMENTACAO.md`.
 
-Não houve acesso a serviços remotos, uso de credenciais reais, migração remota, gravação de aparelho ou teste físico. A prévia visual no navegador depende de um navegador habilitado no ambiente; build/lint não substituem essa conferência.
+Pendências da montagem:
+
+1. Atualizar as duas placas com a versão do portal Wi-Fi e executar o roteiro específico no celular. Os testes físicos anteriores não comprovam esta versão nova.
+2. Resolver a alimentação autônoma da pulseira. A bateria via TP4056/entrada 5V mantém componentes acesos, mas a pulseira fica offline sem USB. Conferir conexões e tensões com multímetro; a causa ainda não foi comprovada. O usuário deixou essa medição para quando tiver o instrumento disponível.
+3. Avaliar e calibrar o pedômetro durante caminhada real. Dez passos simulados somaram dez eventos, mas isso não comprova precisão de caminhada. Sem powerbank, o usuário adiou essa avaliação até resolver a bateria.
+4. Medir atraso, estabilidade e autonomia em uso prolongado e na rede da apresentação. O intervalo de consulta não garante latência em Render suspenso ou rede instável. Resgates de benefícios e comportamento diário completo ainda não foram confirmados manualmente no site publicado.
+
+BOOT e RESET/RST da pulseira estão inacessíveis devido à soldagem; a gravação funcionou sem apertá-los. Para desligamento completo, o usuário confirmou conseguir interromper USB e bateria por chave/conector. Atualizações de firmware devem preservar LittleFS; o reset da demonstração continua exclusivamente pelo site, com confirmação.

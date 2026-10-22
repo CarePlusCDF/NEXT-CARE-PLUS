@@ -1,4 +1,7 @@
 .pio/
+artifacts/
+**/ACESSO-WIFI-PRIVADO.md
+**/*-PRIVADO.zip
 firmware/include/CareConfig.h
 *.pem
 .env

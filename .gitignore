@@ -11,5 +11,7 @@
 **/config.h
 **/CareConfig.h
 artifacts/
+**/ACESSO-WIFI-PRIVADO.md
+**/*-PRIVADO.zip
 **/*.pem
 !**/*.example.pem
