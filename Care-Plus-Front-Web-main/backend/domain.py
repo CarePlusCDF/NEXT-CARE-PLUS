@@ -13,9 +13,9 @@ TZ = ZoneInfo("America/Sao_Paulo")
 ROOT = Path(__file__).parent
 BENEFITS = json.loads((ROOT / "beneficios.json").read_text(encoding="utf-8"))
 GENERAL = json.loads((ROOT / "missoesGerais.json").read_text(encoding="utf-8"))
-COLORS = {"apagada": ("Apagada", "#9BA3AE", [0, 0, 0]), "amarela": ("Amarela", "#F6C90E", [246, 201, 14]),
-          "azul": ("Azul", "#3B82F6", [59, 130, 246]), "verde": ("Verde", "#1c9770", [28, 151, 112]),
-          "vermelha": ("SOS — vermelha", "#EF4444", [239, 68, 68])}
+COLORS = {"apagada": ("Apagada", "#9BA3AE", [0, 0, 0]), "amarela": ("Amarela", "#FFFF00", [255, 255, 0]),
+          "azul": ("Azul", "#0000FF", [0, 0, 255]), "verde": ("Verde", "#00FF00", [0, 255, 0]),
+          "vermelha": ("SOS — vermelha", "#FF0000", [255, 0, 0])}
 
 def day_at(ts=None):
     return datetime.fromtimestamp(now_ts() if ts is None else ts, TZ).date().isoformat()
@@ -106,7 +106,7 @@ def desired(run, state):
     level = sum(m["concluida"] for m in goals)
     color = "vermelha" if state.get("sos") else ["apagada", "amarela", "azul", "verde"][level]
     label, hexa, rgb = COLORS[color]
-    revision = f"{run.id}:{day_at()}:{color}"
+    revision = f"{run.id}:{day_at()}:{color}:palette2"
     return dict(cor=color, label=label, hex=hexa, rgb=rgb, nivel=level, revision=revision,
                 fonte="backend", resetEm=goals[0]["resetEm"], eventosConfirmados=level)
 

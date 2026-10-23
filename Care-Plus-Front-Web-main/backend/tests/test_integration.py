@@ -73,6 +73,7 @@ def test_e2e_duplicate_reset_and_lamp(client):
     assert state["pedometro"]["steps"] == 20
     assert state["aguaMl"] == 440
     assert state["luminaria"]["cor"] == "azul"
+    assert state["luminaria"]["rgb"] == [0, 0, 255]
     mission = state["manuais"][0]
     sel = c.post("/missions/select", headers=h, json={"idMissao": mission["id"], "generation": g}).json()["selection"]
     r = sync(c, g, [ev("confirm-1", "confirm", selection_token=sel["token"])])
@@ -81,6 +82,7 @@ def test_e2e_duplicate_reset_and_lamp(client):
     state = c.get("/connect", headers=h).json()
     assert state["usuario"]["trofeus"] == 100 + mission["trofeus"]
     assert state["luminaria"]["cor"] == "verde"
+    assert state["luminaria"]["rgb"] == [0, 255, 0]
     assert not state["luminaria"]["confirmada"]
     light = sync(c, g, device="lamp").json()["desired"]
     sync(c, g, device="lamp", applied={"revision": light["revision"], "color": light["cor"]})
@@ -175,6 +177,7 @@ def test_cancel_sos_isolation_and_validation(client):
     sync(c, g, [ev("sos", "sos")])
     state = c.get("/connect", headers=h).json()
     assert state["sos"] and state["luminaria"]["cor"] == "vermelha"
+    assert state["luminaria"]["rgb"] == [255, 0, 0]
     assert c.get("/connect", headers=h2).json()["sos"] is None
     c.post("/sos/resolve", headers=h, json={"generation": g})
     assert c.get("/connect", headers=h).json()["sos"] is None
