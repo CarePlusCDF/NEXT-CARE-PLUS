@@ -13,7 +13,7 @@ TZ = ZoneInfo("America/Sao_Paulo")
 ROOT = Path(__file__).parent
 BENEFITS = json.loads((ROOT / "beneficios.json").read_text(encoding="utf-8"))
 GENERAL = json.loads((ROOT / "missoesGerais.json").read_text(encoding="utf-8"))
-COLORS = {"apagada": ("Apagada", "#9BA3AE", [0, 0, 0]), "amarela": ("Amarela", "#FFFF00", [255, 255, 0]),
+COLORS = {"apagada": ("Apagada", "#9BA3AE", [0, 0, 0]), "roxa": ("Roxa", "#FF00FF", [255, 0, 255]),
           "azul": ("Azul", "#0000FF", [0, 0, 255]), "verde": ("Verde", "#00FF00", [0, 255, 0]),
           "vermelha": ("SOS — vermelha", "#FF0000", [255, 0, 0])}
 
@@ -104,9 +104,9 @@ def connect_missions(state):
 def desired(run, state):
     goals = connect_missions(state)
     level = sum(m["concluida"] for m in goals)
-    color = "vermelha" if state.get("sos") else ["apagada", "amarela", "azul", "verde"][level]
+    color = "vermelha" if state.get("sos") else ["apagada", "roxa", "azul", "verde"][level]
     label, hexa, rgb = COLORS[color]
-    revision = f"{run.id}:{day_at()}:{color}:palette2"
+    revision = f"{run.id}:{day_at()}:{color}:palette3"
     return dict(cor=color, label=label, hex=hexa, rgb=rgb, nivel=level, revision=revision,
                 fonte="backend", resetEm=goals[0]["resetEm"], eventosConfirmados=level)
 

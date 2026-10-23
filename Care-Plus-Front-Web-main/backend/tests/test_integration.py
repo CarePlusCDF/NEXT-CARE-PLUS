@@ -137,6 +137,19 @@ def test_fair_handoff_keeps_accounts_separate(client, monkeypatch):
     assert c.get("/connect", headers=visitor_b).json()["pedometro"]["steps"] == 10
     assert c.get("/connect", headers=visitor_a).json()["aguaMl"] == 220
 
+
+def test_first_lamp_color_uses_purple_instead_of_yellow(client):
+    c = client
+    headers, generation = setup(c)
+    assert sync(c, generation, [ev("first-steps", "steps", steps=20)]).status_code == 200
+    light = c.get("/connect", headers=headers).json()["luminaria"]
+    assert light["cor"] == "roxa"
+    assert light["rgb"] == [255, 0, 255]
+    assert light["hex"] == "#FF00FF"
+    response = sync(c, generation, device="lamp", applied={"revision": light["revision"], "color": "roxa"})
+    assert response.status_code == 200
+    assert c.get("/connect", headers=headers).json()["luminaria"]["confirmada"]
+
 def test_parallel_awards_and_scan(client):
     c = client
     h, g = setup(c)

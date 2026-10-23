@@ -375,7 +375,7 @@ class Event(BaseModel):
 
 class Applied(BaseModel):
     revision: str = Field(max_length=100)
-    color: Literal["apagada", "amarela", "azul", "verde", "vermelha"]
+    color: Literal["apagada", "roxa", "azul", "verde", "vermelha"]
 
 class Sync(BaseModel):
     generation: str = Field(default="", max_length=36)
