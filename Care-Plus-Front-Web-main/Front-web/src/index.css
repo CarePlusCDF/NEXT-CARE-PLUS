@@ -84,6 +84,20 @@ select:disabled {
   cursor: not-allowed;
 }
 
+@keyframes mission-menu-enter {
+  from { opacity: 0; transform: translateY(-8px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.mission-menu-enter {
+  transform-origin: top;
+  animation: mission-menu-enter 180ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mission-menu-enter { animation: none; }
+}
+
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {

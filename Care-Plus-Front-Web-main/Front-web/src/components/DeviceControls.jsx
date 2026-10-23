@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { FiActivity, FiAlertTriangle, FiChevronDown } from 'react-icons/fi'
 import { useCare } from '../services/CareContext.jsx'
 import { post } from '../services/api.js'
@@ -9,6 +9,15 @@ export default function DeviceControls() {
   const [busy, setBusy] = useState(false)
   const [actionError, setActionError] = useState('')
   const [resetGeneration, setResetGeneration] = useState(null)
+  const [missionOpen, setMissionOpen] = useState(false)
+  const missionMenu = useRef(null)
+  useEffect(() => {
+    function closeOnOutside(event) {
+      if (!missionMenu.current?.contains(event.target)) setMissionOpen(false)
+    }
+    document.addEventListener('pointerdown', closeOnOutside)
+    return () => document.removeEventListener('pointerdown', closeOnOutside)
+  }, [])
   if (!data) return <p role="status">{error || 'Carregando conexão…'}</p>
   const lampColor = data.luminaria.nivel > 0 || data.sos ? data.luminaria.hex : '#9BA3AE'
   const lampGlow = data.luminaria.nivel > 0 || data.sos
@@ -84,13 +93,16 @@ export default function DeviceControls() {
         <button disabled={busy} className={data.demo ? 'shrink-0 rounded-lg bg-white px-5 py-3 text-[14px] font-bold text-red-800 shadow-sm hover:bg-red-50 disabled:opacity-50' : 'mt-2 font-bold underline'} onClick={() => act('/sos/resolve')}>Encerrar alerta SOS</button>
       </div>}
       <div className={data.demo ? 'mb-4 rounded-xl border border-[#C4EBD9] bg-white p-4' : ''}>
-        <label htmlFor="selectedMission" className={`font-bold block mb-2 ${data.demo ? 'text-[16px] text-[#1A202C]' : ''}`}>Missão para confirmar com o botão 2 da pulseira</label>
-        <div className="relative">
-          <select id="selectedMission" disabled={busy} value={data.selection?.id || ''} className={`mb-2 w-full appearance-none rounded-lg border bg-white py-3 pl-4 pr-12 text-[14px] font-medium text-[#1A202C] disabled:opacity-50 ${data.demo ? 'border-[#8DDBC2] shadow-sm focus:outline-none focus:ring-2 focus:ring-[#147C5C]' : 'border-[#E4E7EB]'}`} onChange={e => e.target.value ? act('/missions/select', { idMissao: e.target.value }) : act('/missions/cancel')}>
-            <option value="">Nenhuma missão selecionada</option>
-            {data.manuais.filter(m => !m.concluida).map(m => <option key={m.id} value={m.id}>{m.titulo || m.missao}</option>)}
-          </select>
-          <FiChevronDown aria-hidden="true" className="pointer-events-none absolute right-4 top-3.5 text-[#147C5C]" size={18} />
+        <p id="selectedMissionLabel" className={`font-bold block mb-2 ${data.demo ? 'text-[16px] text-[#1A202C]' : ''}`}>Missão para confirmar com o botão 2 da pulseira</p>
+        <div className="relative mb-2" ref={missionMenu} onKeyDown={event => { if (event.key === 'Escape') { setMissionOpen(false); event.currentTarget.querySelector('button')?.focus() } }}>
+          <button type="button" disabled={busy} aria-expanded={missionOpen} aria-haspopup="menu" aria-labelledby="selectedMissionLabel selectedMissionValue" onClick={() => setMissionOpen(open => !open)} className={`flex w-full items-center justify-between gap-3 rounded-xl border bg-white px-4 py-3.5 text-left text-[14px] font-semibold text-[#1A202C] shadow-sm transition-all duration-200 hover:border-[#147C5C] hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#147C5C] disabled:opacity-50 ${missionOpen ? 'border-[#147C5C] shadow-md' : 'border-[#B7DDCD]'}`}>
+            <span id="selectedMissionValue" className="truncate">{data.selection?.titulo || 'Escolha uma missão'}</span>
+            <FiChevronDown aria-hidden="true" className={`shrink-0 text-[#147C5C] transition-transform duration-200 ${missionOpen ? 'rotate-180' : ''}`} size={20} />
+          </button>
+          {missionOpen && <div role="menu" aria-labelledby="selectedMissionLabel" className="mission-menu-enter absolute z-30 mt-2 max-h-72 w-full overflow-y-auto rounded-xl border border-[#C4EBD9] bg-white p-2 shadow-xl shadow-[#1A202C]/10">
+            <button type="button" role="menuitemradio" aria-checked={!data.selection} className={`mb-1 w-full rounded-lg px-3 py-3 text-left text-[14px] transition-colors hover:bg-[#F0FBF6] ${!data.selection ? 'bg-[#E5F6ED] font-bold text-[#126C51]' : 'text-[#4A5568]'}`} onClick={() => { setMissionOpen(false); if (data.selection) act('/missions/cancel') }}>Nenhuma missão selecionada</button>
+            {data.manuais.filter(m => !m.concluida).map(m => <button type="button" role="menuitemradio" aria-checked={data.selection?.id === m.id} key={m.id} className={`mb-1 w-full rounded-lg px-3 py-3 text-left text-[14px] transition-colors last:mb-0 hover:bg-[#F0FBF6] ${data.selection?.id === m.id ? 'bg-[#E5F6ED] font-bold text-[#126C51]' : 'text-[#1A202C]'}`} onClick={() => { setMissionOpen(false); if (data.selection?.id !== m.id) act('/missions/select', { idMissao: m.id }) }}>{m.titulo || m.missao}</button>)}
+          </div>}
         </div>
         <p className={data.demo ? 'text-[13px] text-[#4A5568]' : 'mb-3 text-[#6B7685]'}>{data.selection ? `Selecionada: ${data.selection.titulo}. Aguarde a sincronização da pulseira antes de apertar o botão 2 da pulseira.` : 'Escolha uma missão manual. O botão 3 da pulseira cancela a seleção e preserva seu progresso.'}</p>
       </div>
