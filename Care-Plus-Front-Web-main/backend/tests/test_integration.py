@@ -104,6 +104,37 @@ def test_e2e_duplicate_reset_and_lamp(client):
     with store.Session() as db:
         assert len(list(db.scalars(select(Run).where(Run.account_id == "demo")))) == 3
 
+
+def test_fair_handoff_keeps_accounts_separate(client, monkeypatch):
+    c = client
+    admin, original_generation = setup(c)
+    visitor_a, _ = register(c, "visitor-a")
+    visitor_b, _ = register(c, "visitor-b")
+    monkeypatch.setenv("FAIR_ADMIN_ACCOUNT", "demo")
+    assert c.get("/fair/admin", headers=visitor_a).status_code == 403
+    assert c.post("/fair/admin/start", headers=visitor_a, json={"carteirinha": "visitor-b"}).status_code == 403
+    assert c.get("/fair/admin", headers=admin).json()["activeAccount"] is None
+
+    first = c.post("/fair/admin/start", headers=admin, json={"carteirinha": "visitor-a"})
+    assert first.status_code == 200, first.text
+    generation_a = first.json()["generation"]
+    assert c.post("/fair/admin/start", headers=admin, json={"carteirinha": "visitor-b"}).status_code == 409
+    assert c.get("/connect", headers=visitor_a).json()["usuario"]["trofeus"] == 0
+    assert sync(c, original_generation, [ev("old-water", "water")]).json()["reset_required"]
+    assert sync(c, generation_a, [ev("a-water", "water")]).status_code == 200
+    assert c.get("/connect", headers=visitor_a).json()["aguaMl"] == 220
+    assert c.get("/connect", headers=admin).json()["aguaMl"] == 0
+
+    assert c.post("/fair/admin/end", headers=admin).status_code == 200
+    second = c.post("/fair/admin/start", headers=admin, json={"carteirinha": "visitor-b"})
+    assert second.status_code == 200, second.text
+    generation_b = second.json()["generation"]
+    assert sync(c, generation_a, [ev("late-water", "water")]).json()["reset_required"]
+    assert c.get("/connect", headers=visitor_b).json()["aguaMl"] == 0
+    assert sync(c, generation_b, [ev("b-steps", "steps", steps=10)]).status_code == 200
+    assert c.get("/connect", headers=visitor_b).json()["pedometro"]["steps"] == 10
+    assert c.get("/connect", headers=visitor_a).json()["aguaMl"] == 220
+
 def test_parallel_awards_and_scan(client):
     c = client
     h, g = setup(c)

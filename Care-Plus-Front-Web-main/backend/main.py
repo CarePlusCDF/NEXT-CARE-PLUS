@@ -138,8 +138,92 @@ def connect(account_id=Depends(user_id)):
         account = lock_account(db, account_id)
         run, state = load_state(db, account)
         data = snapshot(db, account, run, state)
+        data["fairAdmin"] = bool(os.getenv("FAIR_ADMIN_ACCOUNT") and account_id == os.getenv("FAIR_ADMIN_ACCOUNT"))
+        data["fairEnabled"] = bool(os.getenv("FAIR_ADMIN_ACCOUNT"))
         run.state = state
         return data
+
+
+def fair_admin(account_id):
+    if not os.getenv("FAIR_ADMIN_ACCOUNT") or account_id != os.getenv("FAIR_ADMIN_ACCOUNT"):
+        raise HTTPException(403, "Acesso restrito ao responsável pela demonstração.")
+
+
+def fair_devices(db, admin):
+    ids = admin.profile.get("fairDeviceIds")
+    if ids:
+        devices = list(db.scalars(select(Device).where(Device.id.in_(ids)).order_by(Device.id).with_for_update()))
+    else:
+        devices = list(db.scalars(select(Device).where(Device.account_id == admin.id).order_by(Device.id).with_for_update()))
+        if len(devices) == 2 and {d.kind for d in devices} == {"band", "lamp"}:
+            admin.profile = {**admin.profile, "fairDeviceIds": [d.id for d in devices]}
+    if len(devices) != 2 or {d.kind for d in devices} != {"band", "lamp"}:
+        raise HTTPException(409, "A demonstração exige uma pulseira e uma luminária vinculadas à conta responsável.")
+    if devices[0].account_id != devices[1].account_id:
+        raise HTTPException(409, "Os aparelhos estão vinculados a contas diferentes.")
+    return devices
+
+
+@app.get("/fair/admin")
+def fair_status(account_id=Depends(user_id)):
+    fair_admin(account_id)
+    with transaction() as db:
+        admin = lock_account(db, account_id)
+        devices = fair_devices(db, admin)
+        owner = db.get(Account, devices[0].account_id)
+        return {"activeAccount": None if owner.id == admin.id else owner.id,
+                "activeName": None if owner.id == admin.id else owner.profile.get("nome", ""),
+                "devices": [{"id": d.id, "kind": d.kind, "status": "online" if d.last_seen and now_ts() - d.last_seen <= 15 else "offline",
+                             "synchronized": d.generation == owner.active_run} for d in devices]}
+
+
+class FairStart(BaseModel):
+    carteirinha: str = Field(min_length=1, max_length=80, pattern=r"^[a-zA-Z0-9_-]+$")
+
+
+@app.post("/fair/admin/start")
+def fair_start(data: FairStart, account_id=Depends(user_id)):
+    fair_admin(account_id)
+    if data.carteirinha == account_id:
+        raise HTTPException(400, "Escolha a conta do participante.")
+    with transaction() as db:
+        admin = lock_account(db, account_id)
+        devices = fair_devices(db, admin)
+        if devices[0].account_id != account_id:
+            raise HTTPException(409, "Encerre a vez atual antes de iniciar outra.")
+        participant = lock_account(db, data.carteirinha)
+        if not participant:
+            raise HTTPException(404, "Conta do participante não encontrada.")
+        run = new_run(db, participant, True)
+        participant.active_run = run.id
+        for device in devices:
+            device.account_id = participant.id
+            device.generation = ""
+            device.applied_revision = ""
+            device.applied_color = ""
+            device.applied_at = None
+        return {"activeAccount": participant.id, "activeName": participant.profile.get("nome", ""),
+                "generation": run.id}
+
+
+@app.post("/fair/admin/end")
+def fair_end(account_id=Depends(user_id)):
+    fair_admin(account_id)
+    with transaction() as db:
+        admin = lock_account(db, account_id)
+        devices = fair_devices(db, admin)
+        previous = devices[0].account_id
+        if previous == account_id:
+            return {"activeAccount": None}
+        run = new_run(db, admin, True)
+        admin.active_run = run.id
+        for device in devices:
+            device.account_id = admin.id
+            device.generation = ""
+            device.applied_revision = ""
+            device.applied_color = ""
+            device.applied_at = None
+        return {"activeAccount": None, "previousAccount": previous}
 
 @app.get("/missoes/{carteirinha}")
 def personal(carteirinha: str, account_id=Depends(user_id)):
@@ -309,7 +393,9 @@ def device_sync(device_id: str, data: Sync, authorization: str | None = Header(d
         if not device or not hmac.compare_digest(device.token_hash, digest(token)):
             raise HTTPException(401, "Credencial do dispositivo inválida.")
         account = lock_account(db, device.account_id)
-        db.refresh(device)
+        device = db.scalar(select(Device).where(Device.id == device_id).with_for_update().execution_options(populate_existing=True))
+        if device.account_id != account.id:
+            raise HTTPException(409, "Vínculo do aparelho mudou. Tente sincronizar novamente.")
         run, state = load_state(db, account)
         device.last_seen = now_ts()
         device.diagnostics = dict(queueDepth=data.queue_depth, queueFull=data.queue_full, sensorOk=data.sensor_ok)

@@ -84,6 +84,14 @@ Referências oficiais consultadas: [conexão PostgreSQL](https://supabase.com/do
 
 ## 3. Render e Vercel
 
+### Demonstração na feira com contas individuais
+
+No Render, defina `FAIR_ADMIN_ACCOUNT` com a carteirinha da conta que **já possui a pulseira e a luminária**. Não é a senha da conta. Depois de salvar a variável, faça um novo deploy da API. O link **Gerenciar demonstração da feira** aparecerá no Connect+ somente para essa conta. A rota `/feira` exige a sessão dessa mesma conta e o backend confere a autorização; visitantes não conseguem transferir aparelhos.
+
+O responsável deve manter essa conta aberta em seu próprio navegador. Cada visitante cria uma conta no celular e informa sua carteirinha ao responsável. Em `/feira`, o responsável inicia a vez. O backend cria uma sessão demonstrativa nova e transfere os dois aparelhos, sem alterar os tokens gravados no firmware. Aguarde pulseira e luminária mostrarem **Pronto para teste** antes de usar os botões. Ao terminar, use **Encerrar a vez**. A próxima conta começa com progresso demonstrativo zerado; o histórico anterior permanece na conta do visitante anterior.
+
+O primeiro acesso administrativo identifica os dois aparelhos vinculados à conta responsável e guarda seus IDs no perfil dessa conta. Não altere `FAIR_ADMIN_ACCOUNT` para outra conta depois de iniciar o fluxo sem antes devolver os aparelhos à conta original. Uma fila offline da pulseira pertencente à sessão anterior é descartada quando ela recebe a nova geração. Oriente o visitante a aguardar a sincronização antes de começar. Uma sessão pode ser iniciada de cada vez.
+
 Se publicar o repositório Front-Web separadamente, o `render.yaml` já considera `backend` como raiz. Se publicar a pasta Care-Plus inteira como monorepo, altere `rootDir` para `Care-Plus-Front-Web-main/backend` e selecione esse Blueprint. Não há requisito de FIWARE, MQTT, Docker Compose ou NFC.
 
 Render:

@@ -15,6 +15,7 @@ import Connect from './routes/Connect'
 import Scan from './routes/Scan'
 import Noticias from './routes/Noticias'
 import Perfil from './routes/Perfil'
+import FeiraAdmin from './routes/FeiraAdmin'
 
 const RequireAuth = ({ children }) => {
   const carteirinha = localStorage.getItem('carteirinha')
@@ -42,6 +43,7 @@ const App = () => {
         <Route path="/beneficios" element={<RequireAuth><Beneficios /></RequireAuth>} />
         <Route path="/mind" element={<RequireAuth><Mind /></RequireAuth>} />
         <Route path="/connect" element={<RequireAuth><Connect /></RequireAuth>} />
+        <Route path="/feira" element={<RequireAuth><FeiraAdmin /></RequireAuth>} />
         <Route path="/scan" element={<RequireAuth><Scan /></RequireAuth>} />
         <Route path="/noticias" element={<RequireAuth><Noticias /></RequireAuth>} />
         <Route path="/perfil" element={<RequireAuth><Perfil /></RequireAuth>} />
