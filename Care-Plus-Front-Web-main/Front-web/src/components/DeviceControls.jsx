@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { FiActivity, FiAlertTriangle } from 'react-icons/fi'
+import { FiActivity, FiAlertTriangle, FiChevronDown } from 'react-icons/fi'
 import { useCare } from '../services/CareContext.jsx'
 import { post } from '../services/api.js'
 import ModalConfirmacao from './ModalConfirmacao.jsx'
@@ -12,6 +12,7 @@ export default function DeviceControls() {
   if (!data) return <p role="status">{error || 'Carregando conexão…'}</p>
   const lampColor = data.luminaria.nivel > 0 || data.sos ? data.luminaria.hex : '#9BA3AE'
   const lampGlow = data.luminaria.nivel > 0 || data.sos
+  const devices = [...data.devices].sort((a, b) => (a.kind === 'band' ? 0 : 1) - (b.kind === 'band' ? 0 : 1) || a.deviceId.localeCompare(b.deviceId))
   async function act(path, values) {
     setBusy(true)
     setActionError('')
@@ -37,7 +38,7 @@ export default function DeviceControls() {
       {error && <p role="alert" className="text-red-700 mb-2">API sem atualização: {error}. Os valores exibidos são a última consulta.</p>}
       <div className="grid md:grid-cols-2 gap-3 mb-3">
         {data.devices.length === 0 && <p>Nenhum aparelho configurado nesta conta.</p>}
-        {data.devices.map(d => <div key={d.deviceId} className={data.demo ? 'rounded-xl border border-[#C4EBD9] bg-white p-4 shadow-sm' : 'bg-[#F4F6F8] p-3 rounded-md'}>
+        {devices.map(d => <div key={d.deviceId} className={data.demo ? 'rounded-xl border border-[#C4EBD9] bg-white p-4 shadow-sm' : 'bg-[#F4F6F8] p-3 rounded-md'}>
           {data.demo && <div className="mb-3 flex items-center gap-3">
             {d.kind === 'band' ? (
               <span aria-hidden="true" className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-[#E0F5ED] text-[#126C51] shadow-inner">
@@ -82,12 +83,17 @@ export default function DeviceControls() {
         </div>
         <button disabled={busy} className={data.demo ? 'shrink-0 rounded-lg bg-white px-5 py-3 text-[14px] font-bold text-red-800 shadow-sm hover:bg-red-50 disabled:opacity-50' : 'mt-2 font-bold underline'} onClick={() => act('/sos/resolve')}>Encerrar alerta SOS</button>
       </div>}
-      <label htmlFor="selectedMission" className={`font-bold block mb-2 ${data.demo ? 'text-[15px] text-[#1A202C]' : ''}`}>Missão para confirmar pelo BTN2</label>
-      <select id="selectedMission" disabled={busy} value={data.selection?.id || ''} className={`w-full rounded-md border p-2 mb-2 ${data.demo ? 'border-[#8DDBC2] bg-white py-3 text-[14px] focus:outline-none focus:ring-2 focus:ring-[#147C5C]' : 'border-[#E4E7EB]'}`} onChange={e => e.target.value ? act('/missions/select', { idMissao: e.target.value }) : act('/missions/cancel')}>
-        <option value="">Nenhuma missão selecionada</option>
-        {data.manuais.filter(m => !m.concluida).map(m => <option key={m.id} value={m.id}>{m.titulo || m.missao}</option>)}
-      </select>
-      <p className="text-[#6B7685] mb-3">{data.selection ? `Selecionada: ${data.selection.titulo}. Aguarde a sincronização da pulseira antes de apertar BTN2.` : 'Escolha uma missão manual. BTN3 cancela a seleção e preserva seu progresso.'}</p>
+      <div className={data.demo ? 'mb-4 rounded-xl border border-[#C4EBD9] bg-white p-4' : ''}>
+        <label htmlFor="selectedMission" className={`font-bold block mb-2 ${data.demo ? 'text-[16px] text-[#1A202C]' : ''}`}>Missão para confirmar com o botão 2 da pulseira</label>
+        <div className="relative">
+          <select id="selectedMission" disabled={busy} value={data.selection?.id || ''} className={`mb-2 w-full appearance-none rounded-lg border bg-white py-3 pl-4 pr-12 text-[14px] font-medium text-[#1A202C] disabled:opacity-50 ${data.demo ? 'border-[#8DDBC2] shadow-sm focus:outline-none focus:ring-2 focus:ring-[#147C5C]' : 'border-[#E4E7EB]'}`} onChange={e => e.target.value ? act('/missions/select', { idMissao: e.target.value }) : act('/missions/cancel')}>
+            <option value="">Nenhuma missão selecionada</option>
+            {data.manuais.filter(m => !m.concluida).map(m => <option key={m.id} value={m.id}>{m.titulo || m.missao}</option>)}
+          </select>
+          <FiChevronDown aria-hidden="true" className="pointer-events-none absolute right-4 top-3.5 text-[#147C5C]" size={18} />
+        </div>
+        <p className={data.demo ? 'text-[13px] text-[#4A5568]' : 'mb-3 text-[#6B7685]'}>{data.selection ? `Selecionada: ${data.selection.titulo}. Aguarde a sincronização da pulseira antes de apertar o botão 2 da pulseira.` : 'Escolha uma missão manual. O botão 3 da pulseira cancela a seleção e preserva seu progresso.'}</p>
+      </div>
       {data.demo && <button disabled={busy} className="rounded-lg border border-red-300 bg-white px-4 py-2.5 font-bold text-red-700 hover:bg-red-50 disabled:opacity-50" onClick={() => setResetGeneration(data.generation)}>Reiniciar demonstração</button>}
       {actionError && <p role="alert" className="text-red-700 mt-2">{actionError}</p>}
       {busy && <p role="status" className="mt-2">Salvando…</p>}
