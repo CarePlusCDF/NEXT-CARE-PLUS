@@ -18,6 +18,7 @@ import Flux from '../assets/img.webp'
 import FluxPC from '../assets/imgPC.webp'
 import { useCare } from '../services/CareContext.jsx'
 import DeviceControls from '../components/DeviceControls.jsx'
+import ConnectSimulator from '../components/ConnectSimulator.jsx'
 
 function formatarValorMissao(missao) {
   if (missao.tipo === 'manual') return `${missao.atual} / ${missao.meta} missões`
@@ -92,6 +93,7 @@ const Connect = () => {
         {data?.fairAdmin && <button type="button" onClick={() => navigate('/feira')} className="mb-4 rounded-xl border border-[#8DDBC2] bg-white px-4 py-3 font-bold text-[#126C51] shadow-sm hover:bg-[#F0FBF6]">Gerenciar demonstração da feira →</button>}
         {data?.fairEnabled && !data.fairAdmin && data.devices?.length === 0 && <p className="mb-4 rounded-xl border border-[#C4EBD9] bg-white p-4 text-sm font-medium text-[#245344]">Sua conta está pronta. Peça ao responsável para iniciar sua vez antes de usar a pulseira e a luminária.</p>}
         <DeviceControls />
+        <ConnectSimulator />
         <section className="mb-4">
           <div className="bg-white rounded-md border border-[#E4E7EB] shadow-brand-card p-4">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">

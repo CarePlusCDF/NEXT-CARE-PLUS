@@ -281,3 +281,99 @@ def test_login_profile_whitelist_and_logout(client):
     assert c.get("/connect", headers=second).status_code == 401
     assert c.get("/connect", headers=h).status_code == 200
     assert c.post("/login", json={"carteirinha": "demo", "senha": "teste-12345"}).status_code == 200
+
+
+def test_browser_emulation_requires_demo_isolated_and_idempotent(client):
+    c = client
+    h, normal = register(c)
+    other, _ = register(c, "other")
+    event = dict(id="web-water", type="water", generation=normal)
+    assert c.post("/connect/emulate", json=event).status_code == 401
+    assert c.post("/connect/emulate", headers=h, json=event).status_code == 403
+    state = c.post("/demo/mode", headers=h, json={"generation": normal, "demo": True}).json()
+    g = state["generation"]
+    event["generation"] = g
+    first = c.post("/connect/emulate", headers=h, json=event)
+    assert first.status_code == 200, first.text
+    assert first.json()["aguaMl"] == 220
+    assert not first.json()["duplicate"]
+    repeated = c.post("/connect/emulate", headers=h, json=event).json()
+    assert repeated["duplicate"] and repeated["aguaMl"] == 220
+    assert c.post("/connect/emulate", headers=h, json={**event, "type": "sos"}).status_code == 409
+    assert c.get("/connect", headers=other).json()["aguaMl"] == 0
+    assert c.get("/connect", headers=h).json()["pedometro"]["status"] == "offline"
+    assert c.post("/connect/emulate", headers=h, json={**event, "id": "negative", "type": "steps", "steps": -1}).status_code == 422
+    assert c.post("/connect/emulate", headers=h, json={**event, "id": "oversized", "type": "steps", "steps": 1001}).status_code == 422
+    assert c.post("/connect/emulate", headers=h, json={**event, "id": "stale", "generation": normal}).status_code == 409
+    restored = c.post("/demo/mode", headers=h, json={"generation": g, "demo": False}).json()
+    assert restored["aguaMl"] == restored["pedometro"]["steps"] == 0
+
+
+def test_browser_buttons_and_lamp_reach_device(client):
+    c = client
+    h, g = setup(c)
+    def emulate(id_, kind, **extra):
+        r = c.post("/connect/emulate", headers=h, json=dict(id=id_, type=kind, generation=g, **extra))
+        assert r.status_code == 200, r.text
+        return r.json()
+    def color(value):
+        r = c.post("/connect/lamp", headers=h, json={"generation": g, "color": value})
+        assert r.status_code == 200, r.text
+        return r.json()
+    assert emulate("steps", "steps", steps=20)["luminaria"]["cor"] == "roxa"
+    assert emulate("water1", "water")["aguaMl"] == 220
+    assert emulate("water2", "water")["luminaria"]["cor"] == "azul"
+    assert emulate("empty", "confirm")["result"] == "no_selection"
+    m = c.get("/connect", headers=h).json()["manuais"][0]
+    selection = c.post("/missions/select", headers=h, json={"generation": g, "idMissao": m["id"]}).json()["selection"]
+    assert emulate("wrong", "confirm", selection_token="wrong")["result"] == "selection_changed"
+    assert emulate("cancel", "cancel", selection_token=selection["token"])["selection"] is None
+    selection = c.post("/missions/select", headers=h, json={"generation": g, "idMissao": m["id"]}).json()["selection"]
+    completed = emulate("confirm", "confirm", selection_token=selection["token"])
+    assert completed["result"] == "completed"
+    assert completed["usuario"]["trofeus"] == 100 + m["trofeus"]
+    assert completed["luminaria"]["cor"] == "verde"
+    manual = color("roxa")
+    assert manual["luminaria"]["modo"] == "manual"
+    light = sync(c, g, device="lamp").json()["desired"]
+    assert light["cor"] == "roxa"
+    sync(c, g, device="lamp", applied={"revision": light["revision"], "color": light["cor"]})
+    assert c.get("/connect", headers=h).json()["luminaria"]["confirmada"]
+    assert emulate("sos", "sos")["sos"]["deviceId"] == "simulador-web"
+    assert color("azul")["luminaria"]["cor"] == "vermelha"
+    c.post("/sos/resolve", headers=h, json={"generation": g})
+    assert c.get("/connect", headers=h).json()["luminaria"]["cor"] == "azul"
+    assert color("apagada")["luminaria"]["rgb"] == [0, 0, 0]
+    assert color("automatico")["luminaria"]["cor"] == "verde"
+    assert c.post("/connect/lamp", headers=h, json={"generation": g, "color": "vermelha"}).status_code == 422
+    assert c.post("/connect/lamp", headers=h, json={"generation": "old", "color": "azul"}).status_code == 409
+    assert c.post("/connect/lamp", json={"generation": g, "color": "azul"}).status_code == 401
+
+
+def test_manual_lamp_expires_and_browser_reset_rejects_old_session(client):
+    c = client
+    h, g = setup(c)
+    c.post("/connect/lamp", headers=h, json={"generation": g, "color": "verde"})
+    with transaction() as db:
+        run = db.get(Run, g)
+        state = dict(run.state)
+        state["lamp_override"] = {"color": "verde", "day": "2000-01-01"}
+        run.state = state
+    light = c.get("/connect", headers=h).json()["luminaria"]
+    assert light["modo"] == "automatico" and light["cor"] == "apagada"
+    c.post("/connect/emulate", headers=h, json={"generation": g, "id": "water", "type": "water"})
+    fresh = c.post("/demo/reset", headers=h, json={"generation": g, "confirmation": "REINICIAR"}).json()
+    assert fresh["aguaMl"] == 0 and fresh["luminaria"]["modo"] == "automatico"
+    assert c.post("/connect/emulate", headers=h, json={"generation": g, "id": "late", "type": "water"}).status_code == 409
+
+
+def test_browser_parallel_retry_only_awards_once(client):
+    c = client
+    h, g = setup(c)
+    event = {"generation": g, "id": "parallel-steps", "type": "steps", "steps": 20}
+    with ThreadPoolExecutor(max_workers=6) as pool:
+        responses = list(pool.map(lambda _: c.post("/connect/emulate", headers=h, json=event), range(6)))
+    assert all(r.status_code == 200 for r in responses)
+    state = c.get("/connect", headers=h).json()
+    assert state["pedometro"]["steps"] == 20
+    assert state["usuario"]["trofeus"] == 50

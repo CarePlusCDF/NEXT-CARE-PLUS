@@ -14,7 +14,7 @@ from sqlalchemy.exc import IntegrityError
 
 import database as store
 from database import Account, Device, DeviceEvent, LoginSession, Run, lock_account, now_ts, transaction
-from domain import (BENEFITS, complete_manual, credit, daily, day_at, desired, evaluate,
+from domain import (BENEFITS, apply_band_event, complete_manual, credit, daily, day_at, desired, evaluate,
                     load_state, missions, new_run, snapshot, user_view)
 from security import digest, password_hash, password_valid
 
@@ -385,6 +385,54 @@ class Sync(BaseModel):
     queue_full: bool = False
     sensor_ok: bool = True
 
+class LampControl(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    generation: str = Field(max_length=36)
+    color: Literal["automatico", "apagada", "roxa", "azul", "verde"]
+
+
+@app.post("/connect/lamp")
+def control_lamp(data: LampControl, account_id=Depends(user_id)):
+    with transaction() as db:
+        account = lock_account(db, account_id)
+        run, state = load_state(db, account)
+        expected(data.model_dump(), run)
+        if data.color == "automatico":
+            state.pop("lamp_override", None)
+        else:
+            state["lamp_override"] = dict(color=data.color, day=day_at())
+        result = snapshot(db, account, run, state)
+        run.state = state
+        return result
+
+
+class BrowserEvent(Event):
+    generation: str = Field(max_length=36)
+
+
+@app.post("/connect/emulate")
+def emulate_band(data: BrowserEvent, account_id=Depends(user_id)):
+    with transaction() as db:
+        account = lock_account(db, account_id)
+        run, state = load_state(db, account)
+        expected(data.model_dump(), run)
+        if not run.demo:
+            raise HTTPException(403, "Ative o modo demonstração para emular a pulseira.")
+        events = state.setdefault("browser_events", {})
+        payload = data.model_dump()
+        previous = events.get(data.id)
+        if previous:
+            if previous["payload"] != payload:
+                raise HTTPException(409, "ID de evento reutilizado com conteúdo diferente.")
+            outcome = previous["result"]
+        else:
+            outcome = apply_band_event(db, account, run, state, data, "simulador-web")
+            events[data.id] = dict(payload=payload, result=outcome)
+        result = snapshot(db, account, run, state)
+        run.state = state
+        return dict(result=outcome, duplicate=bool(previous), **result)
+
+
 @app.post("/devices/{device_id}/sync")
 def device_sync(device_id: str, data: Sync, authorization: str | None = Header(default=None)):
     token = bearer(authorization)
@@ -416,36 +464,7 @@ def device_sync(device_id: str, data: Sync, authorization: str | None = Header(d
                         raise HTTPException(409, "ID de evento reutilizado com conteúdo diferente.")
                     outcomes.append(dict(id=e.id, result=previous.result, duplicate=True))
                     continue
-                result = "accepted"
-                if e.occurred_at and e.occurred_at > now_ts() + 300:
-                    result = "invalid_time"
-                elif e.occurred_at and e.occurred_at < run.created_at - 300:
-                    result = "before_generation"
-                else:
-                    day = day_at(e.occurred_at)
-                    d = daily(state, day)
-                    if e.type == "steps":
-                        d["steps"] += e.steps
-                    elif e.type == "water":
-                        d["water"] += state["config"]["cup"]
-                    elif e.type == "sos":
-                        state["sos"] = dict(eventId=e.id, receivedAt=now_ts(), deviceId=device.id)
-                    elif e.type in ("confirm", "cancel"):
-                        selection = state.get("selection")
-                        if day != day_at():
-                            result = "selection_expired"
-                        elif not selection:
-                            result = "no_selection"
-                        elif not e.selection_token or selection["token"] != e.selection_token:
-                            result = "selection_changed"
-                        elif e.type == "confirm":
-                            result = complete_manual(db, account, run, state, selection["id"])
-                        else:
-                            state["selection"] = None
-                            result = "cancelled"
-                    if e.type != "steps":
-                        state["last_button"] = e.type + ":" + result
-                    evaluate(db, run, state, day)
+                result = apply_band_event(db, account, run, state, e, device.id)
                 db.add(DeviceEvent(device_id=device.id, event_id=e.id, run_id=run.id, payload=payload, result=result))
                 db.flush()
                 outcomes.append(dict(id=e.id, result=result, duplicate=False))

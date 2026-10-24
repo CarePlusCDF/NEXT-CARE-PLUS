@@ -19,8 +19,8 @@ export default function DeviceControls() {
     return () => document.removeEventListener('pointerdown', closeOnOutside)
   }, [])
   if (!data) return <p role="status">{error || 'Carregando conexão…'}</p>
-  const lampColor = data.luminaria.nivel > 0 || data.sos ? data.luminaria.hex : '#9BA3AE'
-  const lampGlow = data.luminaria.nivel > 0 || data.sos
+  const lampColor = data.luminaria.cor !== 'apagada' ? data.luminaria.hex : '#9BA3AE'
+  const lampGlow = data.luminaria.cor !== 'apagada'
   const devices = [...data.devices].sort((a, b) => (a.kind === 'band' ? 0 : 1) - (b.kind === 'band' ? 0 : 1) || a.deviceId.localeCompare(b.deviceId))
   async function act(path, values) {
     setBusy(true)

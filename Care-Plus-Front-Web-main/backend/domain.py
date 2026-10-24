@@ -89,6 +89,41 @@ def evaluate(db, run, state, day=None):
             credit(db, run, state, f"connect:{day}:{key}", amount)
             d["completed"].append(key)
 
+
+def apply_band_event(db, account, run, state, event, source):
+    """Apply the same activity rules to physical and browser events."""
+    if event.occurred_at and event.occurred_at > now_ts() + 300:
+        return "invalid_time"
+    if event.occurred_at and event.occurred_at < run.created_at - 300:
+        return "before_generation"
+    day = day_at(event.occurred_at)
+    d = daily(state, day)
+    result = "accepted"
+    if event.type == "steps":
+        d["steps"] += event.steps
+    elif event.type == "water":
+        d["water"] += state["config"]["cup"]
+    elif event.type == "sos":
+        state["sos"] = dict(eventId=event.id, receivedAt=now_ts(), deviceId=source)
+    elif event.type in ("confirm", "cancel"):
+        selection = state.get("selection")
+        if day != day_at():
+            result = "selection_expired"
+        elif not selection:
+            result = "no_selection"
+        elif not event.selection_token or selection["token"] != event.selection_token:
+            result = "selection_changed"
+        elif event.type == "confirm":
+            result = complete_manual(db, account, run, state, selection["id"])
+        else:
+            state["selection"] = None
+            result = "cancelled"
+    if event.type != "steps":
+        state["last_button"] = event.type + ":" + result
+    evaluate(db, run, state, day)
+    return result
+
+
 def connect_missions(state):
     d, c = daily(state), state["config"]
     tomorrow = datetime.combine(datetime.now(TZ).date() + timedelta(days=1), datetime.min.time(), TZ)
@@ -105,10 +140,14 @@ def desired(run, state):
     goals = connect_missions(state)
     level = sum(m["concluida"] for m in goals)
     color = "vermelha" if state.get("sos") else ["apagada", "roxa", "azul", "verde"][level]
+    manual = state.get("lamp_override")
+    manual = manual if manual and manual.get("day") == day_at() else None
+    if manual and not state.get("sos"):
+        color = manual["color"]
     label, hexa, rgb = COLORS[color]
     revision = f"{run.id}:{day_at()}:{color}:palette3"
     return dict(cor=color, label=label, hex=hexa, rgb=rgb, nivel=level, revision=revision,
-                fonte="backend", resetEm=goals[0]["resetEm"], eventosConfirmados=level)
+                fonte="backend", modo="manual" if manual else "automatico", resetEm=goals[0]["resetEm"], eventosConfirmados=level)
 
 def achievements(state):
     days = list(state["days"].values())
